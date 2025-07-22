@@ -4,16 +4,10 @@ import {
   ChevronDown, 
   ChevronRight, 
   Plus, 
-  Search,
-  HelpCircle,
-  MessageCircle,
-  Mail,
-  Book,
-  Bell
+  Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface Snippet {
@@ -158,106 +152,39 @@ const Index = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
-        <div className="flex-1 p-8">
-          <div className="max-w-4xl">
-            <h1 className="text-3xl font-bold mb-6">Welcome to Text Blaze</h1>
-            
-            <div className="mb-8">
-              <p className="text-lg text-muted-foreground mb-4">
-                You can try out your snippets below. Try typing the shortcut{" "}
-                <Badge variant="secondary" className="mx-1">/send</Badge>{" "}
-                or the shortcut{" "}
-                <Badge variant="secondary" className="mx-1">/drop</Badge>{" "}
-                below.
-              </p>
-            </div>
-
-            <div className="bg-card border border-border rounded-lg p-6 mb-8">
-              <textarea
-                className="w-full h-40 p-4 bg-secondary border border-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Type your snippets here to test them..."
-              />
-            </div>
-
-            <div className="mb-6">
-              <p className="text-muted-foreground mb-4">
-                Your shortcuts insert snippets ⚡ and will work on any website. You can also right-click on text boxes to select a snippet from the context menu.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <p className="text-lg font-medium">Create a new snippet now</p>
-              <Button className="bg-gradient-primary hover:shadow-glow">
-                <Plus className="h-4 w-4 mr-2" />
-                New snippet
-              </Button>
-            </div>
+      <div className="flex-1 p-8">
+        <div className="max-w-4xl">
+          <h1 className="text-3xl font-bold mb-6">Welcome to Text Blaze</h1>
+          
+          <div className="mb-8">
+            <p className="text-lg text-muted-foreground mb-4">
+              You can try out your snippets below. Try typing the shortcut{" "}
+              <Badge variant="secondary" className="mx-1">/send</Badge>{" "}
+              or the shortcut{" "}
+              <Badge variant="secondary" className="mx-1">/drop</Badge>{" "}
+              below.
+            </p>
           </div>
-        </div>
 
-        {/* Right Sidebar */}
-        <div className="w-80 border-l border-border bg-card p-4">
-          <div className="space-y-6">
-            {/* Updates Card */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  🎉 July Text Blaze Updates
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Our native Mac and Windows apps have graduated from Beta! Plus, we've made other improvements.
-                </p>
-                <Button variant="link" className="p-0 h-auto text-primary">
-                  Learn more
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+            <textarea
+              className="w-full h-40 p-4 bg-secondary border border-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Type your snippets here to test them..."
+            />
+          </div>
 
-            {/* Help Section */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Want to learn more?</h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3 p-3 hover:bg-accent rounded-md cursor-pointer">
-                  <HelpCircle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium text-sm">Text Blaze documentation</p>
-                    <p className="text-xs text-muted-foreground">Guides and references</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 hover:bg-accent rounded-md cursor-pointer">
-                  <Book className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium text-sm">Text Blaze FAQ</p>
-                    <p className="text-xs text-muted-foreground">Frequently asked questions</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 hover:bg-accent rounded-md cursor-pointer">
-                  <MessageCircle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium text-sm">Community forums</p>
-                    <p className="text-xs text-muted-foreground">Ask questions and suggest features</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 hover:bg-accent rounded-md cursor-pointer">
-                  <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium text-sm">Email the team</p>
-                    <p className="text-xs text-muted-foreground">support@blaze.today</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="mb-6">
+            <p className="text-muted-foreground mb-4">
+              Your shortcuts insert snippets ⚡ and will work on any website. You can also right-click on text boxes to select a snippet from the context menu.
+            </p>
+          </div>
 
-            {/* Mascot */}
-            <div className="flex justify-center pt-8">
-              <div className="text-6xl">🐼</div>
-            </div>
+          <div className="flex items-center gap-4">
+            <p className="text-lg font-medium">Create a new snippet now</p>
+            <Button className="bg-gradient-primary hover:shadow-glow">
+              <Plus className="h-4 w-4 mr-2" />
+              New snippet
+            </Button>
           </div>
         </div>
       </div>
