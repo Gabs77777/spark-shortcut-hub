@@ -1,71 +1,84 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { 
   Flame, 
   ChevronDown, 
   ChevronRight, 
   Plus, 
-  Search
+  Search,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { LoginDialog } from "@/components/LoginDialog";
+import { SettingsDialog } from "@/components/SettingsDialog";
+import { ImportDialog } from "@/components/ImportDialog";
+import { AddSnippetDialog } from "@/components/AddSnippetDialog";
+import { Label } from "@/components/ui/label";
+import { User, Snippet as TauriSnippet, Folder, listSnippets, listFolders, createSnippet, deleteSnippet } from "@/lib/tauri";
+import { toast } from "@/hooks/use-toast";
 
-interface Snippet {
-  id: string;
-  name: string;
-  shortcut: string;
-  category: string;
-}
-
-interface Category {
+interface DisplayCategory {
   name: string;
   icon?: string;
   expanded: boolean;
-  snippets: Snippet[];
+  snippets: TauriSnippet[];
 }
 
-// Sample data matching Text Blaze structure
-const initialCategories: Category[] = [
-  {
-    name: "Botavive",
-    expanded: true,
-    snippets: [
-      { id: "1", name: "Green Color", shortcut: "/green", category: "Botavive" },
-      { id: "2", name: "JSON", shortcut: "/json", category: "Botavive" },
-      { id: "3", name: "Harmony", shortcut: "/harmony", category: "Botavive" },
-      { id: "4", name: "Balance", shortcut: "/balance", category: "Botavive" },
-      { id: "5", name: "Dream", shortcut: "/dream", category: "Botavive" },
-      { id: "6", name: "Free Blueprint", shortcut: "/free", category: "Botavive" },
-      { id: "7", name: "ASIN Dream", shortcut: "/adream", category: "Botavive" },
-      { id: "8", name: "ASIN Balance", shortcut: "/abalance", category: "Botavive" },
-      { id: "9", name: "ASIN Tranquility", shortcut: "/atranq", category: "Botavive" },
-      { id: "10", name: "ASIN Glow", shortcut: "/aglow", category: "Botavive" },
-      { id: "11", name: "ASIN Clarity", shortcut: "/aclarity", category: "Botavive" },
-      { id: "12", name: "Amazon Store", shortcut: "/store", category: "Botavive" },
-      { id: "13", name: "Botavive Phone Number", shortcut: "/phone", category: "Botavive" },
-      { id: "14", name: "Botavie LinkedIn", shortcut: "/link", category: "Botavive" },
-    ]
-  },
-  {
-    name: "Zipify",
-    expanded: true,
-    snippets: [
-      { id: "15", name: "Video autoplay", shortcut: "/vap", category: "Zipify" },
-      { id: "16", name: "Stripe not working", shortcut: "/stripe", category: "Zipify" },
-      { id: "17", name: "Exclude Express Shipping", shortcut: "/eecart", category: "Zipify" },
-      { id: "18", name: "Movie camera emoji", shortcut: "/CAM", category: "Zipify" },
-      { id: "19", name: "Stepping in", shortcut: "/zpst", category: "Zipify" },
-      { id: "20", name: "Align menu to the left", shortcut: "/zpam", category: "Zipify" },
-      { id: "21", name: "Anything else I can help you with?", shortcut: "/zpmw", category: "Zipify" },
-      { id: "22", name: "Ask for a review", shortcut: "/ask", category: "Zipify" },
-      { id: "23", name: "Close out", shortcut: "/zcfo", category: "Zipify" },
-    ]
-  }
-];
 
 const Index = () => {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [user, setUser] = useState<User | null>(null);
+  const [categories, setCategories] = useState<DisplayCategory[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [snippets, setSnippets] = useState<TauriSnippet[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [testText, setTestText] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user]);
+
+  const loadData = async () => {
+    if (!user) return;
+    
+    try {
+      const [foldersData, snippetsData] = await Promise.all([
+        listFolders(user.id),
+        listSnippets(user.id),
+      ]);
+      
+      setFolders(foldersData);
+      setSnippets(snippetsData);
+      
+      // Group snippets by folder
+      const categorizedSnippets = foldersData.map(folder => ({
+        name: folder.name,
+        expanded: true,
+        snippets: snippetsData.filter(snippet => snippet.folder_id === folder.id),
+      }));
+      
+      // Add uncategorized snippets
+      const uncategorizedSnippets = snippetsData.filter(snippet => !snippet.folder_id);
+      if (uncategorizedSnippets.length > 0) {
+        categorizedSnippets.unshift({
+          name: "Uncategorized",
+          expanded: true,
+          snippets: uncategorizedSnippets,
+        });
+      }
+      
+      setCategories(categorizedSnippets);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load data",
+        variant: "destructive",
+      });
+    }
+  };
 
   const toggleCategory = (categoryName: string) => {
     setCategories(prev =>
@@ -73,6 +86,30 @@ const Index = () => {
         cat.name === categoryName ? { ...cat, expanded: !cat.expanded } : cat
       )
     );
+  };
+
+  const handleDeleteSnippet = async (snippetId: number) => {
+    try {
+      await deleteSnippet(snippetId);
+      loadData();
+      toast({
+        title: "Success",
+        description: "Snippet deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete snippet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCategories([]);
+    setFolders([]);
+    setSnippets([]);
   };
 
   const filteredCategories = useMemo(() => {
@@ -86,16 +123,29 @@ const Index = () => {
     })).filter(category => category.snippets.length > 0);
   }, [categories, searchTerm]);
 
+  if (!user) {
+    return <LoginDialog open={true} onLogin={setUser} />;
+  }
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Sidebar */}
       <div className="w-80 border-r border-border bg-card">
         <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-primary rounded-md">
-              <Flame className="h-5 w-5 text-primary-foreground" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-gradient-primary rounded-md">
+                <Flame className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-lg font-semibold">Spark Shortcut Hub</h1>
             </div>
-            <h1 className="text-lg font-semibold">Text Blaze</h1>
+            <div className="flex items-center gap-2">
+              <ImportDialog userId={user.id} onImportComplete={loadData} />
+              <SettingsDialog />
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           <div className="relative mb-4">
@@ -108,10 +158,12 @@ const Index = () => {
             />
           </div>
           
-          <Button className="w-full bg-gradient-primary hover:shadow-glow" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            New snippet
-          </Button>
+          <AddSnippetDialog userId={user.id} onSnippetCreated={loadData}>
+            <Button className="w-full bg-gradient-primary hover:shadow-glow" size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              New snippet
+            </Button>
+          </AddSnippetDialog>
         </div>
 
         <div className="p-2 overflow-y-auto max-h-[calc(100vh-200px)]">
@@ -136,12 +188,25 @@ const Index = () => {
                       key={snippet.id}
                       className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer group"
                     >
-                      <span className="text-sm text-card-foreground truncate">
-                        {snippet.name}
-                      </span>
-                      <Badge variant="secondary" className="text-xs">
-                        {snippet.shortcut}
-                      </Badge>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm text-card-foreground truncate block">
+                          {snippet.name}
+                        </span>
+                        <Badge variant="secondary" className="text-xs mt-1">
+                          {snippet.shortcut}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSnippet(snippet.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                      >
+                        ×
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -154,37 +219,47 @@ const Index = () => {
       {/* Main Content */}
       <div className="flex-1 p-8">
         <div className="max-w-4xl">
-          <h1 className="text-3xl font-bold mb-6">Welcome to Text Blaze</h1>
+          <h1 className="text-3xl font-bold mb-6">Welcome to Spark Shortcut Hub</h1>
           
           <div className="mb-8">
             <p className="text-lg text-muted-foreground mb-4">
-              You can try out your snippets below. Try typing the shortcut{" "}
-              <Badge variant="secondary" className="mx-1">/send</Badge>{" "}
-              or the shortcut{" "}
-              <Badge variant="secondary" className="mx-1">/drop</Badge>{" "}
-              below.
+              You can try out your snippets below. Your shortcuts will work system-wide in any application.
+              Try typing shortcuts like{" "}
+              <Badge variant="secondary" className="mx-1">/green</Badge>{" "}
+              or{" "}
+              <Badge variant="secondary" className="mx-1">/json</Badge>{" "}
+              in the test area below.
             </p>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-6 mb-8">
-            <textarea
-              className="w-full h-40 p-4 bg-secondary border border-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Type your snippets here to test them..."
+            <Label htmlFor="test-area" className="text-sm font-medium mb-2 block">
+              Test your snippets here
+            </Label>
+            <Textarea
+              id="test-area"
+              value={testText}
+              onChange={(e) => setTestText(e.target.value)}
+              className="min-h-[120px]"
+              placeholder="Type your snippets here to test them. Your shortcuts will also work in any other application on your computer!"
             />
           </div>
 
           <div className="mb-6">
             <p className="text-muted-foreground mb-4">
-              Your shortcuts insert snippets ⚡ and will work on any website. You can also right-click on text boxes to select a snippet from the context menu.
+              🔥 Your shortcuts work system-wide in Gmail, Slack, VS Code, and any other application. 
+              The expansion engine runs in the background and will automatically replace your shortcuts as you type.
             </p>
           </div>
 
           <div className="flex items-center gap-4">
             <p className="text-lg font-medium">Create a new snippet now</p>
-            <Button className="bg-gradient-primary hover:shadow-glow">
-              <Plus className="h-4 w-4 mr-2" />
-              New snippet
-            </Button>
+            <AddSnippetDialog userId={user.id} onSnippetCreated={loadData}>
+              <Button className="bg-gradient-primary hover:shadow-glow">
+                <Plus className="h-4 w-4 mr-2" />
+                New snippet
+              </Button>
+            </AddSnippetDialog>
           </div>
         </div>
       </div>
