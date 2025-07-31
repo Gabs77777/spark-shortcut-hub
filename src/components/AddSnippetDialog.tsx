@@ -92,4 +92,4 @@ export default function AddSnippetDialog({ onAdd }: AddSnippetDialogProps) {
       </DialogContent>
     </Dialog>
   );
-}
+};
