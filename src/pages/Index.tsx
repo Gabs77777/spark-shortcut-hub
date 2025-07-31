@@ -13,8 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { ImportDialog } from "@/components/ImportDialog";
 import AddSnippetDialog from "@/components/AddSnippetDialog";
+import AddFolderDialog from "@/components/AddFolderDialog";
 import { Label } from "@/components/ui/label";
-import { Snippet as TauriSnippet, Folder, listSnippets, listFolders, createSnippet, deleteSnippet } from "@/lib/tauri";
+import { Snippet as TauriSnippet, Folder, listSnippets, listFolders, createSnippet, deleteSnippet, createFolder } from "@/lib/tauri";
 import { toast } from "@/hooks/use-toast";
 
 interface DisplayCategory {
@@ -136,27 +137,10 @@ const Index = () => {
             />
           </div>
           
-          <AddSnippetDialog onAdd={async (snippet) => {
-            try {
-              await createSnippet(1, {
-                name: snippet.name,
-                shortcut: snippet.name.toLowerCase().replace(/\s+/g, ''),
-                body: snippet.content,
-                folder_id: null,
-              });
-              loadData();
-              toast({
-                title: "Success",
-                description: "Snippet created successfully",
-              });
-            } catch (error) {
-              toast({
-                title: "Error", 
-                description: "Failed to create snippet",
-                variant: "destructive",
-              });
-            }
-          }} />
+          <div className="space-y-2">
+            <AddSnippetDialog userId={1} folders={folders} onSuccess={loadData} />
+            <AddFolderDialog userId={1} onSuccess={loadData} />
+          </div>
         </div>
 
         <div className="p-2 overflow-y-auto max-h-[calc(100vh-200px)]">
@@ -247,27 +231,7 @@ const Index = () => {
 
           <div className="flex items-center gap-4">
             <p className="text-lg font-medium">Create a new snippet now</p>
-            <AddSnippetDialog onAdd={async (snippet) => {
-              try {
-                await createSnippet(1, {
-                  name: snippet.name,
-                  shortcut: snippet.name.toLowerCase().replace(/\s+/g, ''),
-                  body: snippet.content,
-                  folder_id: null,
-                });
-                loadData();
-                toast({
-                  title: "Success",
-                  description: "Snippet created successfully",
-                });
-              } catch (error) {
-                toast({
-                  title: "Error", 
-                  description: "Failed to create snippet",
-                  variant: "destructive",
-                });
-              }
-            }} />
+            <AddSnippetDialog userId={1} folders={folders} onSuccess={loadData} />
           </div>
         </div>
       </div>

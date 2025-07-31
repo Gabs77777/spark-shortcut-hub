@@ -10,36 +10,50 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-
-interface Snippet {
-  id: string;
-  name: string;
-  content: string;
-  tags?: string[];
-}
+import { createSnippet, type Folder } from "@/lib/tauri";
+import { toast } from "sonner";
 
 interface AddSnippetDialogProps {
-  onAdd: (snippet: Omit<Snippet, 'id'>) => void;
+  userId: number;
+  folders: Folder[];
+  onSuccess: () => void;
 }
 
-export default function AddSnippetDialog({ onAdd }: AddSnippetDialogProps) {
+export default function AddSnippetDialog({ userId, folders, onSuccess }: AddSnippetDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
-  const [content, setContent] = useState("");
+  const [shortcut, setShortcut] = useState("");
+  const [body, setBody] = useState("");
+  const [folderId, setFolderId] = useState<number | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !content.trim()) return;
+    if (!name.trim() || !shortcut.trim() || !body.trim()) return;
 
-    onAdd({
-      name: name.trim(),
-      content: content.trim(),
-    });
+    setIsLoading(true);
+    try {
+      await createSnippet(userId, {
+        name: name.trim(),
+        shortcut: shortcut.trim(),
+        body: body.trim(),
+        folder_id: folderId,
+      });
 
-    setName("");
-    setContent("");
-    setIsOpen(false);
+      toast.success("Snippet created successfully!");
+      setName("");
+      setShortcut("");
+      setBody("");
+      setFolderId(undefined);
+      setIsOpen(false);
+      onSuccess();
+    } catch (error) {
+      toast.error("Failed to create snippet: " + (error as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,23 +70,46 @@ export default function AddSnippetDialog({ onAdd }: AddSnippetDialogProps) {
             Create New Snippet
           </DialogTitle>
           <DialogDescription>
-            Add a new code snippet to your collection. Give it a descriptive name and paste your code.
+            Add a new text snippet with a shortcut. The shortcut will expand to your content when typed.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Input
-              placeholder="Snippet name (e.g., 'React useState hook')"
+              placeholder="Snippet name (e.g., 'Green Color')"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="bg-secondary border-border"
             />
           </div>
           <div>
+            <Input
+              placeholder="Shortcut (e.g., '/green')"
+              value={shortcut}
+              onChange={(e) => setShortcut(e.target.value)}
+              className="bg-secondary border-border"
+            />
+          </div>
+          <div>
+            <Select value={folderId?.toString()} onValueChange={(value) => setFolderId(value ? parseInt(value) : undefined)}>
+              <SelectTrigger className="bg-secondary border-border">
+                <SelectValue placeholder="Select folder (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No folder</SelectItem>
+                {folders.map((folder) => (
+                  <SelectItem key={folder.id} value={folder.id.toString()}>
+                    {folder.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Textarea
-              placeholder="Enter your code snippet here..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+              placeholder="Enter your snippet content here..."
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
               className="min-h-[200px] font-mono bg-secondary border-border"
             />
           </div>
@@ -82,10 +119,10 @@ export default function AddSnippetDialog({ onAdd }: AddSnippetDialogProps) {
             </Button>
             <Button 
               type="submit" 
-              disabled={!name.trim() || !content.trim()}
+              disabled={!name.trim() || !shortcut.trim() || !body.trim() || isLoading}
               className="bg-gradient-primary hover:shadow-glow"
             >
-              Create Snippet
+              {isLoading ? "Creating..." : "Create Snippet"}
             </Button>
           </div>
         </form>
