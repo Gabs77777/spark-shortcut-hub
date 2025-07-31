@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoginDialog } from "@/components/LoginDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { ImportDialog } from "@/components/ImportDialog";
-import { AddSnippetDialog } from "@/components/AddSnippetDialog";
+import AddSnippetDialog from "@/components/AddSnippetDialog";
 import { Label } from "@/components/ui/label";
 import { User, Snippet as TauriSnippet, Folder, listSnippets, listFolders, createSnippet, deleteSnippet } from "@/lib/tauri";
 import { toast } from "@/hooks/use-toast";
@@ -158,108 +158,51 @@ const Index = () => {
             />
           </div>
           
-          <AddSnippetDialog userId={user.id} onSnippetCreated={loadData}>
-            <Button className="w-full bg-gradient-primary hover:shadow-glow" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              New snippet
-            </Button>
-          </AddSnippetDialog>
-        </div>
-
-        <div className="p-2 overflow-y-auto max-h-[calc(100vh-200px)]">
-          {filteredCategories.map((category) => (
-            <div key={category.name} className="mb-2">
-              <button
-                onClick={() => toggleCategory(category.name)}
-                className="w-full flex items-center gap-2 p-2 text-left hover:bg-accent rounded-md text-sm font-medium"
-              >
-                {category.expanded ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                📁 {category.name}
-              </button>
-              
-              {category.expanded && (
-                <div className="ml-6 space-y-1">
-                  {category.snippets.map((snippet) => (
-                    <div
-                      key={snippet.id}
-                      className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer group"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm text-card-foreground truncate block">
-                          {snippet.name}
-                        </span>
-                        <Badge variant="secondary" className="text-xs mt-1">
-                          {snippet.shortcut}
-                        </Badge>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSnippet(snippet.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 p-8">
-        <div className="max-w-4xl">
-          <h1 className="text-3xl font-bold mb-6">Welcome to Spark Shortcut Hub</h1>
-          
-          <div className="mb-8">
-            <p className="text-lg text-muted-foreground mb-4">
-              You can try out your snippets below. Your shortcuts will work system-wide in any application.
-              Try typing shortcuts like{" "}
-              <Badge variant="secondary" className="mx-1">/green</Badge>{" "}
-              or{" "}
-              <Badge variant="secondary" className="mx-1">/json</Badge>{" "}
-              in the test area below.
-            </p>
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
-            <Label htmlFor="test-area" className="text-sm font-medium mb-2 block">
-              Test your snippets here
-            </Label>
-            <Textarea
-              id="test-area"
-              value={testText}
-              onChange={(e) => setTestText(e.target.value)}
-              className="min-h-[120px]"
-              placeholder="Type your snippets here to test them. Your shortcuts will also work in any other application on your computer!"
-            />
-          </div>
-
-          <div className="mb-6">
-            <p className="text-muted-foreground mb-4">
-              🔥 Your shortcuts work system-wide in Gmail, Slack, VS Code, and any other application. 
-              The expansion engine runs in the background and will automatically replace your shortcuts as you type.
-            </p>
-          </div>
-
+          <AddSnippetDialog onAdd={async (snippet) => {
+            try {
+              await createSnippet(user.id, {
+                name: snippet.name,
+                shortcut: snippet.name.toLowerCase().replace(/\s+/g, ''),
+                body: snippet.content,
+                folder_id: null,
+              });
+              loadData();
+              toast({
+                title: "Success",
+                description: "Snippet created successfully",
+              });
+            } catch (error) {
+              toast({
+                title: "Error", 
+                description: "Failed to create snippet",
+                variant: "destructive",
+              });
+            }
+          }} />
+...
           <div className="flex items-center gap-4">
             <p className="text-lg font-medium">Create a new snippet now</p>
-            <AddSnippetDialog userId={user.id} onSnippetCreated={loadData}>
-              <Button className="bg-gradient-primary hover:shadow-glow">
-                <Plus className="h-4 w-4 mr-2" />
-                New snippet
-              </Button>
-            </AddSnippetDialog>
+            <AddSnippetDialog onAdd={async (snippet) => {
+              try {
+                await createSnippet(user.id, {
+                  name: snippet.name,
+                  shortcut: snippet.name.toLowerCase().replace(/\s+/g, ''),
+                  body: snippet.content,
+                  folder_id: null,
+                });
+                loadData();
+                toast({
+                  title: "Success",
+                  description: "Snippet created successfully",
+                });
+              } catch (error) {
+                toast({
+                  title: "Error", 
+                  description: "Failed to create snippet",
+                  variant: "destructive",
+                });
+              }
+            }} />
           </div>
         </div>
       </div>
