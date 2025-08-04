@@ -32,6 +32,25 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [testText, setTestText] = useState("");
 
+  // Simple text expansion for demo purposes
+  const handleTestTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    const lastWord = newValue.split(/\s/).pop() || "";
+    
+    // Check if the last word matches any snippet shortcut
+    const matchingSnippet = snippets.find(snippet => 
+      lastWord.endsWith(snippet.shortcut)
+    );
+    
+    if (matchingSnippet && lastWord === matchingSnippet.shortcut) {
+      // Replace the shortcut with the snippet body
+      const withoutShortcut = newValue.slice(0, -matchingSnippet.shortcut.length);
+      setTestText(withoutShortcut + matchingSnippet.body);
+    } else {
+      setTestText(newValue);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -216,7 +235,7 @@ const Index = () => {
             <Textarea
               id="test-area"
               value={testText}
-              onChange={(e) => setTestText(e.target.value)}
+              onChange={handleTestTextChange}
               className="min-h-[120px]"
               placeholder="Type your snippets here to test them. Your shortcuts will also work in any other application on your computer!"
             />
