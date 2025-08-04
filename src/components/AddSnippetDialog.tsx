@@ -91,12 +91,12 @@ export default function AddSnippetDialog({ userId, folders, onSuccess }: AddSnip
             />
           </div>
           <div>
-            <Select value={folderId?.toString()} onValueChange={(value) => setFolderId(value ? parseInt(value) : undefined)}>
+            <Select value={folderId?.toString() || "none"} onValueChange={(value) => setFolderId(value === "none" ? undefined : parseInt(value))}>
               <SelectTrigger className="bg-secondary border-border">
                 <SelectValue placeholder="Select folder (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No folder</SelectItem>
+                <SelectItem value="none">No folder</SelectItem>
                 {folders.map((folder) => (
                   <SelectItem key={folder.id} value={folder.id.toString()}>
                     {folder.name}
