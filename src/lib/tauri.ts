@@ -3,6 +3,36 @@ import { invoke } from '@tauri-apps/api/core';
 // Check if we're in a Tauri environment
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
+// Mock data storage for browser development
+let mockSnippets: any[] = [
+  {
+    id: 1,
+    user_id: 1,
+    folder_id: null,
+    name: "Thank you",
+    shortcut: "/ty",
+    body: "Thank you for reaching out.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    is_active: true,
+    match_type: "exact"
+  },
+  {
+    id: 2,
+    user_id: 1,
+    folder_id: null,
+    name: "Green Color",
+    shortcut: "/green",
+    body: "#00FF00",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    is_active: true,
+    match_type: "exact"
+  }
+];
+
+let mockFolders: any[] = [];
+
 // Mock invoke function for browser development
 const mockInvoke = async (cmd: string, args?: any): Promise<any> => {
   console.log(`Mock Tauri invoke: ${cmd}`, args);
@@ -13,13 +43,15 @@ const mockInvoke = async (cmd: string, args?: any): Promise<any> => {
     case 'login':
       return { id: 1, email: args.request.email, password_hash: '', created_at: new Date().toISOString() };
     case 'list_folders':
-      return [];
+      return mockFolders;
     case 'create_folder':
-      return { id: Date.now(), user_id: args.userId, name: args.name, parent_id: args.parentId };
+      const newFolder = { id: Date.now(), user_id: args.userId, name: args.name, parent_id: args.parentId };
+      mockFolders.push(newFolder);
+      return newFolder;
     case 'list_snippets':
-      return [];
+      return mockSnippets;
     case 'create_snippet':
-      return {
+      const newSnippet = {
         id: Date.now(),
         user_id: args.userId,
         folder_id: args.request.folder_id,
@@ -31,6 +63,11 @@ const mockInvoke = async (cmd: string, args?: any): Promise<any> => {
         is_active: true,
         match_type: 'exact'
       };
+      mockSnippets.push(newSnippet);
+      return newSnippet;
+    case 'delete_snippet':
+      mockSnippets = mockSnippets.filter(s => s.id !== args.snippetId);
+      return null;
     case 'get_settings':
       return { expand_enabled: true, global_hotkey: 'Ctrl+Shift+Space', excluded_apps: [] };
     default:
